@@ -46,7 +46,7 @@ const Stand = mongoose.model('Stand', standSchema);
 
 // Schema and Model for items
 const itemSchema = new mongoose.Schema({
-  project: {
+  stand: {
       type: mongoose.Schema.ObjectId,
       ref: 'Stand'
   },
@@ -118,7 +118,7 @@ app.delete('/api/stands/:standID', async (req, res) => {
 // new Item
 app.post('/api/stands/:standID/items', async (req, res) => {
     try {
-        let stand = await Stand.findOne({id: req.params.standID});
+        let stand = await Stand.findOne({_id: req.params.standID});
         if (!stand) {
             res.send(404);
             return;
@@ -167,7 +167,7 @@ app.put('/api/stands/:standID/items/:itemID', async (req, res) => {
 // Get a list of all of the items in the market.
 app.get('/api/stands/:standID/items', async (req, res) => {
   try {
-    let stand = await Stand.findOne({_id: req.params.projectID});
+    let stand = await Stand.findOne({_id: req.params.standID});
     if (!stand) {
         res.send(404);
         return;
