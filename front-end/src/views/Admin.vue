@@ -27,22 +27,14 @@
         <p></p>
     </div>
     <div class="actions" v-if="findStand">
-        <button @click="deleteStand(findStand)">Delete stand</button>
-        <button @click="editStand(findStand)">Change stand name</button>
+        <button @click="deleteStand()">Delete stand</button>
+        <button @click="editStand()">Change stand name</button>
     </div>
-
-
-
-
-
-
-
-
 
 <div class="inStand" v-if="findStand">
     <div class="heading">
       <div class="circle">1</div>
-      <h2>Add an Item</h2>
+      <h2>Add an Item to your stand: {{findStand.title}}</h2>
     </div>
     <div class="add">
       <div class="form">
@@ -50,12 +42,20 @@
         <p></p>
         <textarea v-model="description" placeholder="Describe your item here!"></textarea>
         <input type="file" name="photo" @change="fileChanged">
+            <p>Starting bid:</p>
+            <input v-model="bid" placeholder="0"/>
+            <p>Price increase per bid:</p>
+            <input v-model="increment" placeholder="0"/>
         <button @click="upload">Upload</button>
       </div>
       <div class="upload" v-if="addItem">
-        <h2>{{addItem.title}}</h2>
         <img :src="addItem.path" />
+        <p>Title:</p>
+        <h2>{{addItem.title}}</h2>
+        <p>Description: </p>
         <p>{{addItem.description}}</p>
+        <p>Starting bid: {{addItem.bid}}</p>
+        <p>Price increase per bid: {{addItem.increment}}</p>
       </div>
     </div>
         <div class="heading">
@@ -64,36 +64,58 @@
     </div>
     <div class="edit">
       <div class="form">
-        <input v-model="findTitle" placeholder="Select">
-        <div class="suggestions" v-if="items.length > 0">
-          <div class="suggestion" v-for="s in items" :key="s.id" @click="selectItem(s)">{{s.title}}
+        <input v-model="findTitle" placeholder="Search">
+        <div class="suggestions" v-if="suggestions.length > 0">
+          <div class="suggestion" v-for="s in suggestions" :key="s.id" @click="selectItem(s)">{{s.title}}
           </div>
         </div>
-      </div> 
+      </div>
+
+
       <div class="upload" v-if="findItem">
-        <input v-model="findItem.title">
-        <p></p>
-        <textarea v-model="findItem.description" placeholder="Describe your item here!"></textarea>
         <img :src="findItem.path" />
+        <p>Title:</p>
+        <input v-model="findItem.title">
+        <p>Description:</p>
+        <textarea v-model="findItem.description" placeholder="Describe your item here!"></textarea>
+        <p>Starting bid:</p>
+        <input v-model="findItem.bid" placeholder="0">
+        <p>Price increase per bid:</p>
+        <input v-model="findItem.increment" placeholder="0">
       </div>
       <div class="actions" v-if="findItem">
-        <button @click="deleteItem(findItem)">Delete</button>
-        <button @click="editItem(findItem)">Edit</button>
+        <button @click="deleteItem()">Delete</button>
+        <button @click="editItem()">Edit</button>
       </div>
     </div> 
 </div>
+
+    <div class="preview">
+        <div class="heading">
+      <div class="circle">3</div>
+      <h2>Your Stand: </h2>
+      <button @click="preview">Preview</button>
+    </div>
+    <div class="preview" v-if="showPreview">Test text for showPreview</div>
+    <!-- UserStand Preview -->
+    <UserStand :items="items" :findStand="findStand" v-if="showPreview" @bid="getItems()"/>
+    </div>
+
 </div>
 </template>
 
 
 
 
-
 <script>
 import axios from 'axios';
+import UserStand from "../components/UserStand.vue"
 
 export default {
   name: 'Admin',
+  components: {
+      UserStand
+  },
   data() {
     return {
 //FIXME added variables:
@@ -103,6 +125,7 @@ export default {
       findStand: null,
       bid: 0,
       increment: 0,
+      showPreview: false,
 
 
       title: "",
@@ -121,47 +144,39 @@ export default {
       return stands.sort((a, b) => a.title > b.title);
     },
 
-
-    /* suggestions() { */
-    /*     let items = _.flow([ */
-    /*     this.items.entries, */
-    /*     arr => arr.filter(item => item.title.toLowerCase().startsWith(this.findTitle.toLowerCase())); */
-    /*     return items.sort((a, b) => a.title > b.title); */
-    /* }, */
-
-    /* suggestions() { */
-    /*   let items = this.items.filter(item => item.title.toLowerCase().startsWith(this.findTitle.toLowerCase())); */
-    /*   return items.sort((a, b) => a.title > b.title); */
-    /* } */
+    suggestions() {
+      let items = this.items.filter(item => item.title.toLowerCase().startsWith(this.findTitle.toLowerCase()));
+      return items.sort((a, b) => a.title > b.title);
+    }
   },
   created() {
       this.getStands();
       // this.getItems();
   },
   methods: {
-//FIXME added methods:
-
-    async editStand(stand) {
+    preview() {
+        this.showPreview = true;
+    },
+    async editStand() {
       try {
-        await axios.put("/api/stands/" + stand._id, {
+        await axios.put("/api/stands/" + this.findStand._id, {
           title: this.findStand.title,
           atMarket: false,
           expired: false,
         });
         this.findStand = null;
         this.getStands();
-        return true;
       } catch (error) {
         /* console.log(error); */
       }
     },
-    async deleteStand(stand) {
+    async deleteStand() {
         try {
             this.getItems();
                for (const item in this.items) {
                    this.deleteItem(item);
                }
-            await axios.delete("/api/stands/" + stand._id);
+            await axios.delete("/api/stands/" + this.findStand._id);
             this.findStand = null;
             this.getStands();
         } catch (error) {
@@ -182,6 +197,8 @@ export default {
         this.findStand = stand;
         this.findItem = null;
         this.addItem = null;
+        this.addStand = null;
+        this.showPreview = false;
         this.getItems();
     },
 
@@ -200,29 +217,26 @@ export default {
       }
     },
 
-
-
-
-
-    async editItem(item) {
+    async editItem() {
       try {
-        await axios.put("/api/items/" + item._id, {
+        await axios.put("/api/stands/" + this.findStand._id + "/items/" + this.findItem._id, {
           title: this.findItem.title,
           description: this.findItem.description,
-        });
+          bid: this.findItem.bid,
+          increment: this.findItem.increment,
+          hasBid: false,
+        })
         this.findItem = null;
         this.getItems();
-        return true;
       } catch (error) {
         /* console.log(error); */
       }
     },
-    async deleteItem(stand, item) {
+    async deleteItem() {
       try {
-        await axios.delete("/api/stands/" + stand._id + "/items/" + item._id);
+        await axios.delete("/api/stands/" + this.findStand._id + "/items/" + this.findItem._id);
         this.findItem = null;
         this.getItems();
-        return true;
       } catch (error) {
         /* console.log(error); */
       }
@@ -230,6 +244,7 @@ export default {
     selectItem(item) {
       this.findTitle = "";
       this.findItem = item;
+      this.addItem = null;
     },
      async getItems() {
         try {
@@ -262,6 +277,7 @@ export default {
         this.path = "";
         this.bid = 0;
         this.increment = 0;
+        this.getItems();
       } catch (error) {
         /* console.log(error); */
       }
@@ -270,7 +286,6 @@ export default {
   },
 }
 </script>
-
 
 
 

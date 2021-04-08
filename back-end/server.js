@@ -35,6 +35,15 @@ mongoose.connect('mongodb://localhost:27017/bazarre', {
   useNewUrlParser: true
 });
 
+// Schema and Model for market
+const marketSchema = new mongoose.Schema({
+    stands: Array,
+    openDate: Date,
+    expired: Boolean,
+    open: Boolean,
+});
+const Market = mongoose.model('Market', marketSchema);
+
 // Schema and Model for stands
 const standSchema = new mongoose.Schema({
   atMarket: Boolean,
@@ -129,7 +138,7 @@ app.post('/api/stands/:standID/items', async (req, res) => {
             description: req.body.description,
             path: req.body.path,
             bid: req.body.bid,
-            increment: req.body.bid,
+            increment: req.body.increment,
             hasBid: req.body.hasBid
         });
         await item.save();
@@ -191,7 +200,64 @@ app.delete('/api/stands/:standID/items/:itemID', async (req, res) => {
     await item.delete();
     res.sendStatus(200);
   } catch (error) {
-    // console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+//new market
+app.post('/api/markets', async (req, res) => {
+  const market = new Market({
+      stands: null,
+      expired: false,
+      open: false,
+      openDate: req.body.openDate,
+  });
+  try {
+    await market.save();
+    res.send(market);
+  } catch (error) {
+    res.sendStatus(500);
+  }
+});
+
+
+// get Markets
+app.get('/api/markets', async (req, res) => {
+    try {
+        let markets = await Market.find();
+        res.send(markets);
+    } catch (error) {
+        res.sendStatus(500);
+    }
+});
+
+//Edit stand
+app.put('/api/markets/:marketID', async (req, res) => {
+    try {
+        let market = await Market.findOne({
+            _id: req.params.marketID
+        });
+        if (req.body.stands) {
+            market.stands.push(req.body.stands);
+        }
+        market.open = req.body.open;
+        market.expired = req.body.expired;
+        market.openDate = req.body.openDate;
+        await market.save();
+        res.send(market);
+    } catch (error) {
+        res.sendStatus(500);
+    }
+});
+
+//Delete stand
+app.delete('/api/markets/:marketID', async (req, res) => {
+  try {
+    await Market.deleteOne({
+        _id: req.params.marketID
+    });
+      res.sendStatus(200);
+  } catch (error) {
     res.sendStatus(500);
   }
 });
