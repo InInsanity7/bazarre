@@ -1,10 +1,8 @@
-Files for NFT Bidding website
-MINIMUM VIABLE PRODUCT
+Files for NFT Bidding website MINIMUM VIABLE PRODUCT
 
-Implements basic functionality,
-including:
+Implements basic functionality, including:
 
-- User login, upload, sell, and bidding.
-- Non-user viewing
+    User login, upload, sell, and bidding.
+    Non-user viewing
 
 Uses: HTML, CSS, Javascript, Vue

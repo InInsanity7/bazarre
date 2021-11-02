@@ -1,75 +1,128 @@
 <template>
-<div id="app">
-  <div class="header">
-    <router-link to="/">
-      <div class="logo">
-        <img src="/ordinary.png">
+  <div id="app">
+    <header id="header">
+        <div class="home">
+        <router-link to="/"><i class="fas fa-shopping-basket"></i></router-link>
+        </div>
+      <div class="title">
+      <h1>NFT Bid Bazarre</h1>
       </div>
-    </router-link>
-    <div class="title">
-      <h1>Museum of Ordinary Objects</h1>
+    <!--  <nav> -->
+        <div class="user">
+        <router-link to="/dashboard"><i class="fas fa-user-circle"></i></router-link>
+        </div>
+      <!--</nav> -->
+    </header>
+    <div class="view">
+    <router-view />
+    </div>
+    <div class="footer">
+    <a href="https://github.com/InInsanity7/cs260repo/tree/main/final">https://github.com/InInsanity7/cs260repo/tree/main/final</a>
     </div>
   </div>
-  <div class="content">
-    <router-view />
-  </div>
-  <div class="footer">
-    <router-link to="/admin">Admin</router-link>
-  </div>
-</div>
 </template>
 
 <style>
+/* Color scheme: https://paletton.com/#uid=7040u0knHs+edG7jrvYscpiuCk2 */
+/* red: #e74c3c
+ * blue: #277E8E
+
+ dark: #1d3557;
+ medium: #457b9d;
+ light: #a8dadc;
+ off-white: #f1faee;
+ red: #e63946;
+ */
+
 html {
-  box-sizing: border-box;
+    background-color: #fafafa;
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
-  background: #fff;
-  padding: 0px;
-  margin: 0px;
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 300;
+  font-size: 13pt;
+  margin: 0px 5%;
+  color: #f1faee;
 }
 
-/* Header */
-.header {
+#header {
+  font-family: 'Akaya Kanadaka', sans-serif;
   display: flex;
-  padding: 10px 100px 0px 100px;
-  background-color: #5BDEFF;
-  color: #1C454F;
-}
-
-.title {
-  margin-top: 5px;
-}
-
-.title h1 {
-  font-size: 30px;
-}
-
-.content {
-  padding: 20px 100px;
-  min-height: 500px;
-}
-
-/* Footer */
-.footer {
+  margin: 0 1em 1em 0;
   height: 50px;
-  padding: 20px 100px 0px 100px;
-  background: #e3e3e3;
-  font-size: 12px;
+  width: 500px;
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  /* Fixed position */
+  position: fixed;
+  z-index: 10000;
+  left: 50%;
+  transform: translate(-50%, 0);
+  /* Color and alignment */
+  background: #1d3557;
+  color: #f1faee;
+  text-align: center;
+  align-items: center;
+  justify-content:center;
+  box-shadow: 0 0 0 0.7em #457b9d;
 }
 
 .footer a {
-  color: #000;
+    text-align:center;
+    color:#457b9d;
+    text-decoration: none;
+}
+.footer a:hover {
+    color:#457b9d;
+    text-decoration: none;
+}
+.footer {
+    padding-bottom: 10px;
 }
 
+.footer, .view {
+  text-align: center;
+  padding-top: 70px;
+  color: #1d3557;
+}
+.home {
+    grid-column: 1;
+    padding: 10px;
+  color: #f1faee;
+}
+.user {
+    grid-column: 3;
+    padding: 10px;
+  color: #f1faee;
+}
+.title {
+    grid-column: 2;
+}
+/* nav { */
+/*   display: border-box; */
+/*   justify-content: center; */
+/* } */
+
 h1 {
-  font-size: 20px;
+  color: #fff;
+  font-size: 45px;
+  color: #f1faee;
 }
 
 h2 {
-  font-size: 14px;
+  font-size: 12px;
+  color: #f1faee;
+}
+
+#header .fas {
+  font-size: 25px;
+  color: #fff;
+  width: 50px;
+  color: #f1faee;
+}
+
+.pure-button-primary {
+  background-color: #7EBC89;
 }
 </style>

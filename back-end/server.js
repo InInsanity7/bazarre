@@ -1,265 +1,52 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const bodyParser = require("body-parser");
+const mongoose = require('mongoose');
 
-// Configure multer so that it will upload to '../front-end/public/images'
-const multer = require('multer')
-const upload = multer({
-  dest: '../front-end/public/images/',
-  limits: {
-    fileSize: 10000000
-  }
-});
-
-//express
+// setup express
 const app = express();
+
+// setup body parser middleware to conver to JSON and handle URL encoded forms
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: false
 }));
 
-// Upload a photo. Uses the multer middleware for the upload and then returns
-// the path where the photo is stored in the file system.
-app.post('/api/photos', upload.single('photo'), async (req, res) => {
-  // Just a safety check
-  if (!req.file) {
-    return res.sendStatus(400);
-  }
-  res.send({
-    path: "/images/" + req.file.filename
-  });
-});
-
-// connect to the database
-mongoose.connect('mongodb://localhost:27017/bazarre', {
+// connect to the mongodb database
+mongoose.connect('mongodb://localhost:27017/bidbazarre', {
+  useUnifiedTopology: true,
   useNewUrlParser: true
 });
 
-// Schema and Model for market
-const marketSchema = new mongoose.Schema({
-    stands: Array,
-    openDate: Date,
-    expired: Boolean,
-    open: Boolean,
-});
-const Market = mongoose.model('Market', marketSchema);
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
-// Schema and Model for stands
-const standSchema = new mongoose.Schema({
-  atMarket: Boolean,
-  expired: Boolean,
-  title: String,
-  // owner: String,
-});
-const Stand = mongoose.model('Stand', standSchema);
-
-// Schema and Model for items
-const itemSchema = new mongoose.Schema({
-  stand: {
-      type: mongoose.Schema.ObjectId,
-      ref: 'Stand'
-  },
-  title: String,
-  description: String,
-  path: String,
-  bid: Number,
-  increment: Number,
-  hasBid: Boolean
-});
-const Item = mongoose.model('Item', itemSchema);
-
-// new stand
-app.post('/api/stands', async (req, res) => {
-  const stand = new Stand({
-      title: req.body.title,
-      // owner: req.body.owner,
-  });
-  try {
-    await stand.save();
-    res.send(stand);
-  } catch (error) {
-    // console.log(error);
-    res.sendStatus(500);
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: [
+    'secretValue'
+  ],
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
-});
-
-// list stands
-app.get('/api/stands', async (req, res) => {
-    try {
-        let stands = await Stand.find();
-        res.send(stands);
-    } catch (error) {
-        // console.log(error);
-        res.sendStatus(500);
-    }
-});
-
-//Edit stand
-app.put('/api/stands/:standID', async (req, res) => {
-    try {
-        let stand = await Stand.findOne({
-            _id: req.params.standID
-        });
-        stand.title = req.body.title;
-        stand.atMarket = req.body.atMarket;
-        stand.expired = req.body.expired;
-        await stand.save();
-        res.send(stand);
-    } catch (error) {
-        // console.log(error);
-        res.sendStatus(500);
-    }
-});
-
-//Delete stand
-app.delete('/api/stands/:standID', async (req, res) => {
-  try {
-    await Stand.deleteOne({
-        _id: req.params.standID
-    });
-      res.sendStatus(200);
-  } catch (error) {
-    // console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-// new Item
-app.post('/api/stands/:standID/items', async (req, res) => {
-    try {
-        let stand = await Stand.findOne({_id: req.params.standID});
-        if (!stand) {
-            res.send(404);
-            return;
-        }
-        let item = new Item({
-            stand: stand,
-            title: req.body.title,
-            description: req.body.description,
-            path: req.body.path,
-            bid: req.body.bid,
-            increment: req.body.increment,
-            hasBid: req.body.hasBid
-        });
-        await item.save();
-        res.send(item);
-    } catch (error) {
-    // console.log(error);
-    res.sendStatus(500);
-    }
-    });
-
-//Edit item || Update bid
-app.put('/api/stands/:standID/items/:itemID', async (req, res) => {
-    try {
-        let item = await Item.findOne({
-            _id: req.params.itemID,
-            stand: req.params.standID
-        });
-        if (!item) {
-            res.send(404);
-            return;
-        }
-        item.title = req.body.title;
-        item.description = req.body.description;
-        item.bid = req.body.bid;
-        item.increment = req.body.increment;
-        item.hasBid = req.body.hasBid;
-        await item.save();
-        res.send(item);
-    } catch (error) {
-        // console.log(error);
-        res.sendStatus(500);
-    }
-});
-
-// Get a list of all of the items in the market.
-app.get('/api/stands/:standID/items', async (req, res) => {
-  try {
-    let stand = await Stand.findOne({_id: req.params.standID});
-    if (!stand) {
-        res.send(404);
-        return;
-    }
-    let items = await Item.find({stand:stand}).populate('stand');
-    res.send(items);
-  } catch (error) {
-    // console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-//Delete item
-app.delete('/api/stands/:standID/items/:itemID', async (req, res) => {
-  try {
-    let item = await Item.findOne({_id:req.params.itemID, stand: req.params.standID});
-    if (!item) {
-        res.send(404);
-        return;
-    }
-    await item.delete();
-    res.sendStatus(200);
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
-
-//new market
-app.post('/api/markets', async (req, res) => {
-  const market = new Market({
-      stands: null,
-      expired: false,
-      open: false,
-      openDate: req.body.openDate,
-  });
-  try {
-    await market.save();
-    res.send(market);
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
+}));
 
 
-// get Markets
-app.get('/api/markets', async (req, res) => {
-    try {
-        let markets = await Market.find();
-        res.send(markets);
-    } catch (error) {
-        res.sendStatus(500);
-    }
-});
 
-//Edit stand
-app.put('/api/markets/:marketID', async (req, res) => {
-    try {
-        let market = await Market.findOne({
-            _id: req.params.marketID
-        });
-        if (req.body.stands) {
-            market.stands.push(req.body.stands);
-        }
-        market.open = req.body.open;
-        market.expired = req.body.expired;
-        market.openDate = req.body.openDate;
-        await market.save();
-        res.send(market);
-    } catch (error) {
-        res.sendStatus(500);
-    }
-});
+// import the users module and setup its API path
+const users = require("./users.js");
+app.use("/api/users", users.routes);
 
-//Delete stand
-app.delete('/api/markets/:marketID', async (req, res) => {
-  try {
-    await Market.deleteOne({
-        _id: req.params.marketID
-    });
-      res.sendStatus(200);
-  } catch (error) {
-    res.sendStatus(500);
-  }
-});
+const stands = require("./stands.js");
+app.use("/api/stands", stands.routes);
 
-app.listen(3000, () => console.log('Server listening on port 3000!'));
+const photos = require("./photos.js");
+app.use("/api/photos", photos.routes);
+
+const comments = require("./comments.js");
+app.use("/api/comments", comments.routes);
+
+
+
+
+app.listen(3007, () => console.log('Server listening on port 3007!'));

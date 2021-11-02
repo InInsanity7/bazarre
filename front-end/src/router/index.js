@@ -1,20 +1,27 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import Admin from '../views/Admin.vue'
+import Dashboard from '../views/Dashboard.vue'
+import Stand from '../views/Stand.vue'
 
 Vue.use(VueRouter)
 
-const routes = [{
+const routes = [
+  {
     path: '/',
-    name: 'home',
+    name: 'Home',
     component: Home
   },
   {
-    path: '/admin',
-    name: 'admin',
-    component: Admin
-  }
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard
+  },
+  {
+    path: '/stand/:id',
+    name: 'stand',
+    component: Stand
+  },
 ]
 
 const router = new VueRouter({
